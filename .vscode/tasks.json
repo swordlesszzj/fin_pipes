@@ -3,15 +3,21 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "fin_pipes",
+			"label": "Build pipe_solver",
 			"command": "g++",
 			"args": [
 				"-fdiagnostics-color=always",
 				"-std=c++17",
 				"-g",
-				"fin_pipes.cpp",
+				"-Iinclude",
+				
+				"src/main.cpp",
+				"src/Matrix.cpp",
+				"src/SymmetricTridiagonalQR.cpp",
+				"src/PipeSystem.cpp",
+				"src/MatrixUtils.cpp",
 				"-o",
-				"fin_pipes"
+				"build/pipe_solver"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
