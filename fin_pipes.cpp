@@ -741,7 +741,7 @@ public:
             x_hat = x_hat / beta_vals[i];
 
             // 存储当前向量
-            X.setColumn(i, x_hat);
+            X.setColumn(i, x_hat); 
         }
 
         // 构建三对角矩阵 T
