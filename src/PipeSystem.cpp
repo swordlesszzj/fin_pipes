@@ -2,7 +2,7 @@
 #include "MatrixUtils.h"
 #include <fstream>
 #include <iostream>
-#include "include/json.hpp"
+#include "json.hpp"
 
 
 using json = nlohmann::json;
