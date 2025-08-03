@@ -4,11 +4,12 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
-            "name": "fin_pipes",
+            "name": "pipe_solver",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/fin_pipes",
+            "program": "${workspaceFolder}/build/pipe_solver",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

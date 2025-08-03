@@ -13,6 +13,8 @@ public:
     vector<Pipe> pipes;
     unordered_map<int, int> number; // <节点编号, 顺序索引>
     vector<int> id;  // 节点编号列表，按顺序存储
+    vector<Restraint> restraints;
+
     Matrix StiffnessMatrix;
     Matrix MassMatrix;
 

@@ -34,3 +34,23 @@ struct Pipe {
         J_y = J_x / 2;
     }
 };
+
+// Dof
+struct DofConstraint {
+    int node;
+    int connecting_node;
+    double direction_x;
+    double direction_y;
+    double direction_z; 
+    double friction;
+    double gap;
+    double stiffness;
+    std::string support_guid;
+    std::string support_tag;
+    int type;
+};
+
+// Restraint
+struct Restraint {
+    std::vector<DofConstraint> dofs;
+};

@@ -10,6 +10,42 @@ using json = nlohmann::json;
 static double K1[12][12]{}, M1[12][12]{}, C[12][12]{}, c[3][3]{}, CT[12][12]{};
 static double MultiResult[12][12]{};
 
+// 解析单个 DOF 约束，添加 static 限定
+static DofConstraint parse_dof(const json& j) {
+    return {
+        j.value("node", 0),
+        j.value("connecting_node", 0),
+        j.value("direction_x", 0.0),
+        j.value("direction_y", 0.0),
+        j.value("direction_z", 0.0),
+        j.value("friction", 0.0),
+        j.value("gap", 0.0),
+        j.value("stiffness", 0.0),
+        j.value("support_guid", std::string{}),
+        j.value("support_tag", std::string{}),
+        j.value("type", 0)
+    };
+}
+
+// 解析完整的 restraint 数组，添加 static 限定
+static std::vector<Restraint> parse_restraints(const json& root) {
+    std::vector<Restraint> restraints;
+    if (!root.contains("boundary_condition") || !root["boundary_condition"].contains("restraints"))
+        return restraints;
+
+    const auto& j_restraints = root["boundary_condition"]["restraints"];
+    for (const auto& r : j_restraints) {
+        Restraint restraint;
+        for (const auto& dof : r["dofs"]) {
+            restraint.dofs.push_back(parse_dof(dof));
+        }
+        restraints.push_back(restraint);
+    }
+    return restraints;
+    
+}
+
+
 PipeSystem::PipeSystem() : StiffnessMatrix(0, 0), MassMatrix(0, 0) { }
 
 void PipeSystem::resetTempMatrices() {
@@ -75,10 +111,14 @@ void PipeSystem::loadFromFile(const string& filename) {
         }
     }
 
+    restraints = parse_restraints(j);
+
     // 初始化全局矩阵大小
     StiffnessMatrix = Matrix(id.size() * 6, id.size() * 6);
     MassMatrix = Matrix(id.size() * 6, id.size() * 6);
+
 }
+
 
 void PipeSystem::assembleMatrices() {
     resetTempMatrices();
@@ -183,6 +223,42 @@ void PipeSystem::assembleMatrices() {
         for (int i = 6; i <= 11; i++) {
             for (int j = 6; j <= 11; j++) {
                 StiffnessMatrix(i + 6 * id_end - 6, j + 6 * id_end - 6) += MultiResult[i][j];
+            }
+        }
+    }
+        for (size_t i = 0; i < restraints.size(); ++i) {
+        const auto& r = restraints[i];
+        for (size_t j = 0; j < r.dofs.size(); ++j) {
+            const auto& dof = r.dofs[j];
+            if (dof.type == 0) continue;
+
+            // 定义DOF类型到索引的映射
+            int dof_index = 0;
+            switch (dof.type) {
+            case 1: dof_index = 6; break;
+            case 2: dof_index = 5; break;
+            case 3: dof_index = 4; break;
+            case 10: dof_index = 3; break;
+            case 11: dof_index = 2; break;
+            case 12: dof_index = 1; break;
+            default: throw std::runtime_error("nonlinear restraint");
+            }
+
+            int row_idx = number[dof.node] * 6 - dof_index;
+
+            // 添加对角线项
+            StiffnessMatrix(row_idx, row_idx) += dof.stiffness;
+
+            // 如果有连接节点，添加耦合项
+            if (dof.connecting_node != 0) {
+                int col_idx = number[dof.connecting_node] * 6 - dof_index;
+
+                StiffnessMatrix(col_idx, col_idx) += dof.stiffness;
+
+                // 添加反对角线项（负值）
+                StiffnessMatrix(row_idx, col_idx) -= dof.stiffness;
+                StiffnessMatrix(col_idx, row_idx) -= dof.stiffness;
+
             }
         }
     }

@@ -28,11 +28,11 @@ A C++ project for solving pipe systems.
 ├── external
 │   └── json.hpp
 ├── include
-│   ├── Matrix.h
-│   ├── MatrixUtils.h
-│   ├── Pipe.h
+│   ├── Matrix.h                  # class Matrix
+│   ├── MatrixUtils.h             
+│   ├── Pipe.h                    # Pipe struct 
 │   ├── PipeSystem.h
-│   └── SymmetricTridiagonalQR.h
+│   └── SymmetricTridiagonalQR.h  # class SymmetricTridiagonalQR
 ├── src
 │   ├── Matrix.cpp
 │   ├── MatrixUtils.cpp

@@ -6,7 +6,7 @@ int main() {
     PipeSystem pipeSystem;
 
     try {
-        pipeSystem.loadFromFile("Default.txt");
+        pipeSystem.loadFromFile("data/Default.txt");
         pipeSystem.assembleMatrices();
 
         Matrix temp(1, 1);
