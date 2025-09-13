@@ -9,7 +9,7 @@
             "name": "pipe_solver",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/pipe_solver",
+            "program": "${workspaceFolder}/build/pipe_solver.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

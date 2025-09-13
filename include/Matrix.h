@@ -45,7 +45,7 @@ public:
     static Matrix Solve_Matrix(const Matrix& A, const Matrix& B);
 
     // Lanczos迭代法
-    pair<vector<double>, Matrix> lanczosIteration(const Matrix& K,const Matrix& M,int q,double tol = 1e-12);
+    pair<vector<double>, Matrix> lanczosIteration(const Matrix& K,const Matrix& M,int q,double tol = 1e-40);
 
     // Cholesky分解
     Matrix choleskyDecomposition(const Matrix& M);

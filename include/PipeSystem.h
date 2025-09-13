@@ -21,6 +21,8 @@ public:
     PipeSystem();
     void loadFromFile(const string& filename);
     void assembleMatrices();
+    static bool saveMatrices(const Matrix& massMatrix, const Matrix& stiffnessMatrix, const std::string& filename);
+    static bool loadMatrices(Matrix& massMatrix, Matrix& stiffnessMatrix, const std::string& filename);
 
 private:
     void resetTempMatrices();
