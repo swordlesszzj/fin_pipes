@@ -24,6 +24,9 @@ struct Pipe {
     float Length;
     float Aera;
 
+    int id_start_discrete;
+    int id_end_discrete;
+
     void computeProperties() {
         ShearModulus = ElasticModulus / 2 / (1 + PoissionRatio);
         Length = std::sqrt(DeltaX*DeltaX + DeltaY*DeltaY + DeltaZ*DeltaZ);

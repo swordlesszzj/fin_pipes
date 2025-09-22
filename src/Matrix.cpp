@@ -547,16 +547,7 @@ pair<vector<double>, Matrix> Matrix::subspaceIteration(const Matrix &K, const Ma
         
 
         Xk = Xk1 * Phi;
-        for(int j=0;j<Xk.cols;j++){
-            length=0;
-            for(int i=0;i<Xk.rows;i++){
-                length+=Xk(i,j)*Xk(i,j);
-            }
-            length=sqrt(length);
-            for(int i=0;i<Xk.rows;i++){
-                Xk(i,j)=Xk(i,j)/length;
-            }
-        }
+
         prev_eigenvalues = current_eigenvalues;
     }
 

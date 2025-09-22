@@ -3,21 +3,25 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "Build pipe_solver",
+			"label": "Build pipe_solver.exe",
 			"command": "g++",
 			"args": [
 				"-fdiagnostics-color=always",
 				"-std=c++17",
 				"-g",
 				"-Iinclude",
-				"-Iexternal/openblas64",
+				"-Iexternal/mingw64/include/openblas",
+				"-Iexternal",
 				"src/main.cpp",
 				"src/Matrix.cpp",
 				"src/SymmetricTridiagonalQR.cpp",
 				"src/PipeSystem.cpp",
 				"src/MatrixUtils.cpp",
+				"-Lexternal/mingw64/lib", // 库文件路径
+                "-lopenblas",
 				"-o",
-				"build/pipe_solver"
+				"build/pipe_solver",
+				
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"

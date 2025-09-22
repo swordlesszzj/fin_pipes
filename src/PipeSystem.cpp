@@ -528,7 +528,7 @@ void PipeSystem::loadFromFile(const string &filename)
     pipes.clear();
     id.clear();
     number.clear();
-
+    id_size=0;
     ifstream file(filename);
     if (!file)
     {
@@ -563,7 +563,9 @@ void PipeSystem::loadFromFile(const string &filename)
             if (p.PoissionRatio == 0)
                 p.PoissionRatio = 0.3;
 
-            
+            p.id_end_discrete=-1;
+            p.id_start_discrete=-1;
+
             if (elem.contains("fluid_density") && elem["fluid_density"].is_array() && !elem["fluid_density"].empty())
             {
                 p.Density = elem["fluid_density"][0].get<double>();
@@ -574,6 +576,9 @@ void PipeSystem::loadFromFile(const string &filename)
 
             p.computeProperties();
             pipes.push_back(p);
+
+            int n_discrete=ceil(p.Length/p.Diameter*2);
+            id_size+=n_discrete-1;
 
             // 记录节点编号顺序
             if (number.find(p.StartNode) == number.end())
@@ -588,20 +593,89 @@ void PipeSystem::loadFromFile(const string &filename)
             }
         }
     }
-
+    id_size+=id.size();
     restraints = parse_restraints(j);
 
     // 初始化全局矩阵大小
-    StiffnessMatrix = Matrix(id.size() * 6, id.size() * 6);
-    MassMatrix = Matrix(id.size() * 6, id.size() * 6);
+    StiffnessMatrix = Matrix(id_size * 6, id_size * 6);
+    MassMatrix = Matrix(id_size * 6, id_size * 6);
 }
 
 void PipeSystem::assembleMatrices()
 {
     resetTempMatrices();
+    int count=id.size();
+    for (Pipe &p1 : pipes)
+    {   
+        int n_discrete=ceil(p1.Length/p1.Diameter*2);
+        
+        float h = std::sqrt(p1.DeltaX * p1.DeltaX + p1.DeltaZ * p1.DeltaZ);
+        if (fabs(h/p1.Length) < 1e-8)
+        {
+            c(0,0) = 0;
+            c(0,1) = p1.DeltaY/p1.Length;
+            c(0,2) = 0;
+            c(1,0) = 0;
+            c(1,1) = 0;
+            c(1,2) = 1;
+            c(2,0) = p1.DeltaY/p1.Length;
+            c(2,1) = 0;
+            c(2,2) = 0;
+        }
+        else
+        {
+            c(0,0) = p1.DeltaX / p1.Length;
+            c(0,1) = p1.DeltaY / p1.Length;
+            c(0,2) = p1.DeltaZ / p1.Length;
+            c(1,0) = -p1.DeltaX * p1.DeltaY / p1.Length / h;
+            c(1,1) = h / p1.Length;
+            c(1,2) = -p1.DeltaZ * p1.DeltaY / p1.Length / h;
+            c(2,0) = -p1.DeltaZ / h;
+            c(2,1) = 0;
+            c(2,2) = p1.DeltaX / h;
+        }
+        orthogonalize(c);
 
-    for (const Pipe &p1 : pipes)
-    {
+        // 构造大尺寸旋转矩阵 C 和转置 CT
+        for (int i = 0; i <= 3; i++)
+        {
+            for (int j = 0; j <= 2; j++)
+            {
+                for (int k = 0; k <= 2; k++)
+                {
+                    C(3 * i + j, 3 * i + k) = c(j, k);
+                }
+            }
+        }
+        for (int i = 0; i <= 11; i++)
+        {
+            for (int j = 0; j <= 11; j++)
+            {
+                CT(i, j) = C(j, i);
+            }
+        }
+        if(n_discrete>=2){
+            p1.id_start_discrete=count;
+            p1.id_end_discrete=count+n_discrete-2;
+        }
+        p1.Length=p1.Length/n_discrete;
+        p1.Mass=p1.Mass/n_discrete;
+        p1.I_x=p1.I_x/n_discrete;
+
+    for(int i=1;i<=n_discrete;i++){
+        int id_start;
+        int id_end;
+        
+        if(i==1) id_start = number[p1.StartNode] - 1;
+        else{
+            id_start=count;
+            count++;
+        }
+        if(i==n_discrete)id_end = number[p1.EndNode] - 1;
+        else{
+            id_end=count;
+        }
+        
         // 计算局部刚度矩阵 K1 和质量矩阵 M1
        // 一致质量矩阵
         for (int i = 0; i <= 8; i++)
@@ -663,56 +737,8 @@ void PipeSystem::assembleMatrices()
         }
         //cout<<K1;
         // 计算旋转矩阵 c
-        float h = std::sqrt(p1.DeltaX * p1.DeltaX + p1.DeltaZ * p1.DeltaZ);
-        if (fabs(h/p1.Length) < 1e-8)
-        {
-            c(0,0) = 0;
-            c(0,1) = p1.DeltaY/p1.Length;
-            c(0,2) = 0;
-            c(1,0) = 0;
-            c(1,1) = 0;
-            c(1,2) = 1;
-            c(2,0) = p1.DeltaY/p1.Length;
-            c(2,1) = 0;
-            c(2,2) = 0;
-        }
-        else
-        {
-            c(0,0) = p1.DeltaX / p1.Length;
-            c(0,1) = p1.DeltaY / p1.Length;
-            c(0,2) = p1.DeltaZ / p1.Length;
-            c(1,0) = -p1.DeltaX * p1.DeltaY / p1.Length / h;
-            c(1,1) = h / p1.Length;
-            c(1,2) = -p1.DeltaZ * p1.DeltaY / p1.Length / h;
-            c(2,0) = -p1.DeltaZ / h;
-            c(2,1) = 0;
-            c(2,2) = p1.DeltaX / h;
-        }
-        orthogonalize(c);
-
-        // 构造大尺寸旋转矩阵 C 和转置 CT
-        for (int i = 0; i <= 3; i++)
-        {
-            for (int j = 0; j <= 2; j++)
-            {
-                for (int k = 0; k <= 2; k++)
-                {
-                    C(3 * i + j, 3 * i + k) = c(j, k);
-                }
-            }
-        }
-        for (int i = 0; i <= 11; i++)
-        {
-            for (int j = 0; j <= 11; j++)
-            {
-                CT(i, j) = C(j, i);
-            }
-        }
-
-        int id_start = number[p1.StartNode] - 1;
-        int id_end = number[p1.EndNode] - 1;
-
-        // 计算旋转后的矩阵
+        
+                // 计算旋转后的矩阵
         MultiResult = CT * M1 * C;
         for (int i = 0; i <= 5; i++)
         {
@@ -772,6 +798,7 @@ void PipeSystem::assembleMatrices()
             {
                 StiffnessMatrix(i + 6 * id_end - 6, j + 6 * id_end - 6) += MultiResult(i, j);
             }
+        }
         }
     }
     for (size_t i = 0; i < restraints.size(); ++i)
@@ -850,7 +877,7 @@ void PipeSystem::assembleMatrices()
             }
         }
     }
-int n = id.size() * 6;
+int n = id_size * 6;
 int Num = 0;
 
 //第一步：收集需要保留和移除的索引

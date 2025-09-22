@@ -17,6 +17,7 @@ public:
 
     Matrix StiffnessMatrix;
     Matrix MassMatrix;
+    int id_size;
 
     PipeSystem();
     void loadFromFile(const string& filename);

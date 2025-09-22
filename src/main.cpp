@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include "PipeSystem.h"
 #include "Matrix.h"
-#include "cblas.h"
 
 int main()
 {
@@ -9,7 +8,7 @@ int main()
 
     try
     {
-        pipeSystem.loadFromFile("data/simple2.txt");
+        pipeSystem.loadFromFile("data/simple7.txt");
         pipeSystem.assembleMatrices();
         // pipeSystem.saveMatrices(pipeSystem.MassMatrix,pipeSystem.StiffnessMatrix," matrix");
         // pipeSystem.loadMatrices(pipeSystem.MassMatrix,pipeSystem.StiffnessMatrix," matrix");
